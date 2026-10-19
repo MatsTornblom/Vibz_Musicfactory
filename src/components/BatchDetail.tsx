@@ -52,7 +52,7 @@ export function BatchDetail() {
         try {
           await startGeneration(job.id);
         } catch (e) {
-          setError(`Brief saved, but generation did not start: ${(e as Error).message}`);
+          setError(`Song prompt saved, but generation did not start: ${(e as Error).message}`);
           await reload();
           setBusy(false);
           return;
@@ -88,7 +88,7 @@ export function BatchDetail() {
       {error && <div className="bg-red-500/10 text-red-500 px-4 py-2 rounded-lg">{error}</div>}
 
       <div className="bg-gray-800 rounded-lg p-6 space-y-4 max-w-3xl">
-        <h2 className="text-xl font-semibold">New brief</h2>
+        <h2 className="text-xl font-semibold">New song prompt</h2>
         <div>
           <label className="block text-sm text-gray-400 mb-1">Stil: genre, mood, instrumentation, artist references for the vibe</label>
           <textarea
@@ -131,12 +131,12 @@ export function BatchDetail() {
         {jobs === null ? (
           <div className="p-6 text-gray-400 flex items-center gap-2"><Loader2 size={18} className="animate-spin" /> Loading…</div>
         ) : jobs.length === 0 ? (
-          <div className="p-6 text-gray-400">No briefs in this folder yet.</div>
+          <div className="p-6 text-gray-400">No song prompts in this folder yet.</div>
         ) : (
           <table className="w-full">
             <thead>
               <tr className="bg-gray-700 text-left text-sm font-medium">
-                <th className="px-6 py-3">Brief</th>
+                <th className="px-6 py-3">Song prompt</th>
                 <th className="px-6 py-3">Title</th>
                 <th className="px-6 py-3">Status</th>
                 <th className="px-6 py-3">Songs</th>

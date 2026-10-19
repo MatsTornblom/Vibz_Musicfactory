@@ -114,7 +114,7 @@ export function Review() {
         <div className="text-gray-400 flex items-center gap-2"><Loader2 size={18} className="animate-spin" /> Loading…</div>
       ) : songs.length === 0 ? (
         <div className="bg-gray-800 rounded-lg p-6 text-gray-300 max-w-2xl">
-          No songs in this folder yet. Open a brief, make the song in Suno and paste its link under &ldquo;Songs from Suno&rdquo;.
+          No songs in this folder yet. Open a song prompt, make the song in Suno and paste its link under &ldquo;Songs from Suno&rdquo;.
         </div>
       ) : (
         <>

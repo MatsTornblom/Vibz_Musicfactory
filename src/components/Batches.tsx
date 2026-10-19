@@ -32,7 +32,7 @@ export function Batches() {
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Folders</h1>
       <p className="text-gray-400 max-w-2xl">
-        A folder groups song briefs, for example one theme or one round of generating. Open a folder to add briefs.
+        Use folders to sort song prompts into categories
       </p>
 
       {error && <div className="bg-red-500/10 text-red-500 px-4 py-2 rounded-lg">{error}</div>}
@@ -62,7 +62,7 @@ export function Batches() {
             <thead>
               <tr className="bg-gray-700 text-left text-sm font-medium">
                 <th className="px-6 py-3">Name</th>
-                <th className="px-6 py-3">Briefs</th>
+                <th className="px-6 py-3">Song prompts</th>
                 <th className="px-6 py-3">Created</th>
               </tr>
             </thead>

@@ -67,7 +67,7 @@ export function Settings() {
           </button>
         </div>
         <p className="text-sm text-gray-400">
-          Instructions for the AI that turns a brief into a Suno style prompt and lyrics. Change anything: tone, rules,
+          Instructions for the AI that turns what you write (Stil and Text) into a Suno style prompt and lyrics. Change anything: tone, rules,
           what to avoid. The fixed part below is added automatically.
         </p>
         <textarea
@@ -82,7 +82,7 @@ export function Settings() {
         <h2 className="text-xl font-semibold">Fixed part (added automatically, read-only)</h2>
         <p className="text-sm text-gray-400">
           This makes sure the app always gets style prompt, lyrics, title and song vibe back as separate fields. It is
-          not part of the prompt above, so editing the prompt cannot break it. The brief is sent as
+          not part of the prompt above, so editing the prompt cannot break it. What you write is sent as
           &ldquo;Stil: …&rdquo; and &ldquo;Text: …&rdquo;.
         </p>
         <pre className="whitespace-pre-wrap bg-gray-900 rounded-lg p-4 text-sm text-gray-400">{OUTPUT_CONTRACT}</pre>

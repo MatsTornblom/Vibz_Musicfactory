@@ -183,7 +183,7 @@ export function JobEditor() {
   };
 
   const remove = async () => {
-    if (!job || !confirm('Delete this brief and everything generated from it?')) return;
+    if (!job || !confirm('Delete this song prompt and everything generated from it?')) return;
     try {
       await deleteJob(job.id);
       navigate(job.batch_id ? `/folders/${job.batch_id}` : '/');
@@ -218,7 +218,7 @@ export function JobEditor() {
       </Link>
 
       <div className="flex items-center gap-4">
-        <h1 className="text-3xl font-bold">{fields.title || 'Untitled brief'}</h1>
+        <h1 className="text-3xl font-bold">{fields.title || 'Untitled song prompt'}</h1>
         <StatusBadge status={job.status} />
         {saved && <span className="text-sm text-green-500">{saved}</span>}
       </div>
@@ -244,9 +244,9 @@ export function JobEditor() {
         </div>
       )}
 
-      {/* Brief */}
+      {/* Song prompt (the curator's input) */}
       <div className="bg-gray-800 rounded-lg p-6 space-y-4">
-        <h2 className="text-xl font-semibold">Brief</h2>
+        <h2 className="text-xl font-semibold">Song prompt</h2>
         <div>
           <label className="block text-sm text-gray-400 mb-1">Stil</label>
           <textarea
@@ -416,7 +416,7 @@ export function JobEditor() {
       )}
 
       <button onClick={remove} className="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-red-500">
-        <Trash2 size={14} /> Delete this brief
+        <Trash2 size={14} /> Delete this song prompt
       </button>
     </div>
   );

@@ -46,7 +46,7 @@ export default function App() {
           <Route path="/jobs/:jobId" element={<JobEditor />} />
           <Route
             path="/search"
-            element={<Placeholder title="Search" description="Search across briefs, titles, lyrics and style tags, including songs you discarded." comingIn="a later iteration" />}
+            element={<Placeholder title="Search" description="Search across song prompts, titles, lyrics and style tags, including songs you discarded." comingIn="a later iteration" />}
           />
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<Navigate to="/" replace />} />

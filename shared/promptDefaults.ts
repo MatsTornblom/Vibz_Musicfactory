@@ -16,7 +16,7 @@ export const STYLE_PROMPT_MAX = 300;
 // The creative part of the prompt. Fully editable by the curator in Settings.
 export const DEFAULT_PROMPT = `You are a professional Music Producer and Prompt Engineer specializing in Suno AI, creating music for Vibz, a social platform built around love, empathy and good vibes. Songs are attached to user messages inside the app, so they need to feel like something: emotionally resonant, stylistically distinct and fun to discover.
 
-The brief may be written in Swedish. All output is in English.
+The input (Stil and Text) may be written in Swedish. All output is in English.
 
 Style prompt rules:
 - Comma-separated descriptive tags.
