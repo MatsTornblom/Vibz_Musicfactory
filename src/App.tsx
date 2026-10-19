@@ -5,6 +5,7 @@ import { Placeholder } from './components/Placeholder';
 import { Batches } from './components/Batches';
 import { BatchDetail } from './components/BatchDetail';
 import { JobEditor } from './components/JobEditor';
+import { Review } from './components/Review';
 import { Settings } from './components/Settings';
 import { LoadingScreen, LoginModal, NoAccessScreen } from './components/Modals';
 import { resolveAccess, type AccessState } from './lib/auth';
@@ -41,6 +42,7 @@ export default function App() {
         <Route element={<Layout />}>
           <Route path="/" element={<Batches />} />
           <Route path="/folders/:batchId" element={<BatchDetail />} />
+          <Route path="/folders/:batchId/review" element={<Review />} />
           <Route path="/jobs/:jobId" element={<JobEditor />} />
           <Route
             path="/search"

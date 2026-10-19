@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Loader2, Sparkles } from 'lucide-react';
-import { createJob, getBatch, listJobs, startGeneration } from '../lib/api';
-import type { Batch, Job } from '../lib/types';
+import { ArrowLeft, Headphones, Loader2, Sparkles } from 'lucide-react';
+import { createJob, getBatch, listJobs, listSongsForFolder, startGeneration } from '../lib/api';
+import type { Batch, Job, SongWithJob } from '../lib/types';
 import { StatusBadge } from './StatusBadge';
 
 export function BatchDetail() {
@@ -10,6 +10,7 @@ export function BatchDetail() {
   const navigate = useNavigate();
   const [batch, setBatch] = useState<Batch | null>(null);
   const [jobs, setJobs] = useState<Job[] | null>(null);
+  const [songs, setSongs] = useState<SongWithJob[]>([]);
   const [style, setStyle] = useState('');
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
@@ -22,8 +23,13 @@ export function BatchDetail() {
 
   useEffect(() => {
     getBatch(batchId).then(setBatch).catch(e => setError(e.message));
+    listSongsForFolder(batchId).then(setSongs).catch(e => setError(e.message));
     reload();
   }, [batchId, reload]);
+
+  const toReview = songs.filter(s => s.decision === 'undecided').length;
+  const kept = songs.filter(s => s.decision === 'keep').length;
+  const songCount = (jobId: string) => songs.filter(s => s.job_id === jobId).length;
 
   // Keep the list fresh while something is being generated.
   const anyGenerating = jobs?.some(j => j.status === 'generating') ?? false;
@@ -64,7 +70,20 @@ export function BatchDetail() {
       <Link to="/" className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-white">
         <ArrowLeft size={16} /> All folders
       </Link>
-      <h1 className="text-3xl font-bold">{batch?.name ?? '…'}</h1>
+      <div className="flex flex-wrap items-center gap-4">
+        <h1 className="text-3xl font-bold">{batch?.name ?? '…'}</h1>
+        {songs.length > 0 && (
+          <Link
+            to={`/folders/${batchId}/review`}
+            className="px-4 py-2 bg-pink-500 rounded-lg hover:bg-pink-600 transition-colors flex items-center gap-2"
+          >
+            <Headphones size={18} /> Listen and decide
+            <span className="text-pink-100/80 text-sm">
+              ({toReview} to review, {kept} kept)
+            </span>
+          </Link>
+        )}
+      </div>
 
       {error && <div className="bg-red-500/10 text-red-500 px-4 py-2 rounded-lg">{error}</div>}
 
@@ -120,6 +139,7 @@ export function BatchDetail() {
                 <th className="px-6 py-3">Brief</th>
                 <th className="px-6 py-3">Title</th>
                 <th className="px-6 py-3">Status</th>
+                <th className="px-6 py-3">Songs</th>
                 <th className="px-6 py-3">Created</th>
               </tr>
             </thead>
@@ -132,6 +152,7 @@ export function BatchDetail() {
                   </td>
                   <td className="px-6 py-4">{j.title ?? <span className="text-gray-500">—</span>}</td>
                   <td className="px-6 py-4"><StatusBadge status={j.status} /></td>
+                  <td className="px-6 py-4">{songCount(j.id) || <span className="text-gray-500">—</span>}</td>
                   <td className="px-6 py-4 text-gray-400">{new Date(j.created_at).toLocaleString()}</td>
                 </tr>
               ))}

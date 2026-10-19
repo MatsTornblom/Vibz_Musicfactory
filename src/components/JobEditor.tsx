@@ -1,9 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Check, Copy, Loader2, RotateCcw, Sparkles, Trash2 } from 'lucide-react';
+import { ArrowLeft, Check, Copy, Loader2, Music, RotateCcw, Sparkles, Trash2 } from 'lucide-react';
 import { STYLE_PROMPT_MAX } from '../../shared/promptDefaults';
-import { createRegenJob, deleteJob, getJob, startGeneration, updateJob, type JobEdit } from '../lib/api';
-import type { Job } from '../lib/types';
+import { parseSunoLinks } from '../../shared/suno';
+import {
+  addSongs,
+  createRegenJob,
+  deleteJob,
+  getJob,
+  listSongsForJob,
+  startGeneration,
+  updateJob,
+  type JobEdit,
+} from '../lib/api';
+import type { Job, Song } from '../lib/types';
+import { SongCard } from './SongCard';
 import { StatusBadge } from './StatusBadge';
 
 const STUCK_AFTER_MS = 5 * 60 * 1000;
@@ -39,6 +50,9 @@ export function JobEditor() {
   const [saved, setSaved] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState('');
+  const [songs, setSongs] = useState<Song[]>([]);
+  const [links, setLinks] = useState('');
+  const [linkMsg, setLinkMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   // Local copies of the editable fields; saved to the database on blur.
   const [fields, setFields] = useState({ brief_style: '', brief_text: '', style_prompt: '', lyrics: '', title: '' });
@@ -63,7 +77,38 @@ export function JobEditor() {
 
   useEffect(() => {
     getJob(jobId).then(applyJob).catch(e => setError(e.message));
+    listSongsForJob(jobId).then(setSongs).catch(e => setError(e.message));
   }, [jobId, applyJob]);
+
+  const addFromLinks = async () => {
+    const { ids, unrecognised } = parseSunoLinks(links);
+    if (!ids.length) {
+      setLinkMsg({
+        ok: false,
+        text: unrecognised.length
+          ? 'No song id found. Open the song in Suno and copy its address (suno.com/song/…). Short share links (suno.com/s/…) do not work.'
+          : 'Paste at least one Suno song link.',
+      });
+      return;
+    }
+    setBusy(true);
+    setLinkMsg(null);
+    try {
+      const fresh = await getJob(jobId); // make sure we copy the latest saved prompt
+      const { added, duplicates } = await addSongs(fresh, ids);
+      setSongs(await listSongsForJob(jobId));
+      applyJob(await getJob(jobId));
+      setLinks('');
+      const parts = [`Added ${added} song${added === 1 ? '' : 's'}.`];
+      if (duplicates.length) parts.push(`${duplicates.length} already in the tool.`);
+      if (unrecognised.length) parts.push(`Ignored: ${unrecognised.join(', ')}`);
+      setLinkMsg({ ok: true, text: parts.join(' ') });
+    } catch (e) {
+      setLinkMsg({ ok: false, text: (e as Error).message });
+    } finally {
+      setBusy(false);
+    }
+  };
 
   // Poll while the AI is working.
   const generating = job?.status === 'generating';
@@ -299,6 +344,49 @@ export function JobEditor() {
               </button>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Songs from Suno */}
+      {hasResult && (
+        <div className="bg-gray-800 rounded-lg p-6 space-y-4">
+          <h2 className="text-xl font-semibold flex items-center gap-2"><Music size={20} /> Songs from Suno</h2>
+          <p className="text-sm text-gray-400">
+            Paste the Suno link of each song you made from this prompt, one per line (Suno makes two per generation).
+            Title, style and lyrics are filled in from the prompt above and the song vibe from the AI&apos;s suggestion.
+            You can edit them on each song.
+          </p>
+          <textarea
+            value={links}
+            onChange={e => setLinks(e.target.value)}
+            rows={2}
+            placeholder="https://suno.com/song/…"
+            className="w-full px-4 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 font-mono text-sm"
+          />
+          <div className="flex items-center gap-3">
+            <button
+              onClick={addFromLinks}
+              disabled={busy || !links.trim()}
+              className="px-4 py-2 bg-pink-500 rounded-lg hover:bg-pink-600 transition-colors disabled:opacity-50"
+            >
+              Add songs
+            </button>
+            {linkMsg && <span className={`text-sm ${linkMsg.ok ? 'text-green-500' : 'text-red-500'}`}>{linkMsg.text}</span>}
+          </div>
+
+          {songs.length > 0 && (
+            <div className="space-y-4 pt-2">
+              {songs.map(s => (
+                <SongCard
+                  key={s.id}
+                  song={s}
+                  onChange={u => setSongs(list => list.map(x => (x.id === u.id ? u : x)))}
+                  onDelete={id => setSongs(list => list.filter(x => x.id !== id))}
+                  onError={setError}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
 

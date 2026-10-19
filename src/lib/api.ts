@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import { DEFAULT_MODEL, DEFAULT_PROMPT, SETTING_KEYS } from '../../shared/promptDefaults';
-import type { Batch, Job } from './types';
+import { sunoAudioUrl, sunoSongUrl } from '../../shared/suno';
+import type { Batch, Job, Song, SongWithJob } from './types';
 
 function check<T>(res: { data: T | null; error: { message: string } | null }): T {
   if (res.error) throw new Error(res.error.message);
@@ -92,6 +93,66 @@ export async function startGeneration(jobId: string): Promise<void> {
     const body = await res.json().catch(() => null);
     throw new Error(body?.error ?? `Could not start generation (HTTP ${res.status})`);
   }
+}
+
+// --- Songs --------------------------------------------------------------------------------
+
+export async function listSongsForJob(jobId: string): Promise<Song[]> {
+  return check(
+    await supabase.from('mf_songs').select('*').eq('job_id', jobId).order('created_at', { ascending: true })
+  ) as Song[];
+}
+
+export async function listSongsForFolder(batchId: string): Promise<SongWithJob[]> {
+  return check(
+    await supabase
+      .from('mf_songs')
+      .select('*, job:mf_jobs!inner(id,batch_id,brief_style,brief_text,title)')
+      .eq('job.batch_id', batchId)
+      .order('created_at', { ascending: true })
+  ) as unknown as SongWithJob[];
+}
+
+/**
+ * Register songs the curator made in Suno. Title, style tags and lyrics start as what we sent
+ * to Suno (the job's working copy) and the song vibe as the AI's suggestion; all editable after.
+ * Returns how many were added and which ids were already there.
+ */
+export async function addSongs(job: Job, sunoIds: string[]): Promise<{ added: number; duplicates: string[] }> {
+  const existing = check(
+    await supabase.from('mf_songs').select('suno_id').in('suno_id', sunoIds)
+  ) as { suno_id: string }[];
+  const have = new Set(existing.map(e => e.suno_id));
+  const fresh = sunoIds.filter(id => !have.has(id));
+
+  if (fresh.length) {
+    const rows = fresh.map(id => ({
+      job_id: job.id,
+      suno_id: id,
+      suno_url: sunoSongUrl(id),
+      audio_url: sunoAudioUrl(id),
+      title: job.title,
+      style_tags: job.style_prompt,
+      lyrics: job.lyrics,
+      song_vibe: job.gen_song_vibe,
+    }));
+    const { error } = await supabase.from('mf_songs').insert(rows);
+    if (error) throw new Error(error.message);
+    if (job.status !== 'done') await supabase.from('mf_jobs').update({ status: 'done' }).eq('id', job.id);
+  }
+  return { added: fresh.length, duplicates: sunoIds.filter(id => have.has(id)) };
+}
+
+export type SongEdit = Partial<Pick<Song, 'title' | 'song_vibe' | 'artist' | 'notes' | 'decision'>>;
+
+export async function updateSong(id: string, patch: SongEdit): Promise<void> {
+  const { error } = await supabase.from('mf_songs').update(patch).eq('id', id);
+  if (error) throw new Error(error.message);
+}
+
+export async function deleteSong(id: string): Promise<void> {
+  const { error } = await supabase.from('mf_songs').delete().eq('id', id);
+  if (error) throw new Error(error.message);
 }
 
 // --- Settings -----------------------------------------------------------------------------
