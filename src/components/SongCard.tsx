@@ -1,5 +1,5 @@
-import { useEffect, useState, type RefObject } from 'react';
-import { Check, ExternalLink, Trash2, Undo2, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Check, ExternalLink, Headphones, Trash2, Undo2, X } from 'lucide-react';
 import { deleteSong, updateSong, type SongEdit } from '../lib/api';
 import type { Decision, Song } from '../lib/types';
 
@@ -8,9 +8,7 @@ interface Props {
   onChange: (song: Song) => void;
   onDelete?: (id: string) => void;
   onError: (message: string) => void;
-  audioRef?: RefObject<HTMLAudioElement>;
-  autoPlay?: boolean;
-  /** Shown above the title, e.g. the brief this song came from. */
+  /** Shown above the title, e.g. the song prompt this song came from. */
   context?: string;
 }
 
@@ -20,19 +18,17 @@ const DECISION_STYLE: Record<Decision, string> = {
   undecided: 'bg-gray-500/20 text-gray-300',
 };
 
-export function SongCard({ song, onChange, onDelete, onError, audioRef, autoPlay, context }: Props) {
+export function SongCard({ song, onChange, onDelete, onError, context }: Props) {
   const [fields, setFields] = useState({
     title: song.title ?? '',
     song_vibe: song.song_vibe ?? '',
     artist: song.artist,
     notes: song.notes ?? '',
   });
-  const [playFailed, setPlayFailed] = useState(false);
 
   // A different song (e.g. next in the review queue) resets the editable fields.
   useEffect(() => {
     setFields({ title: song.title ?? '', song_vibe: song.song_vibe ?? '', artist: song.artist, notes: song.notes ?? '' });
-    setPlayFailed(false);
   }, [song.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const save = async (patch: SongEdit) => {
@@ -82,36 +78,18 @@ export function SongCard({ song, onChange, onDelete, onError, audioRef, autoPlay
             )}
           </div>
         </div>
-        {song.suno_url && (
-          <a
-            href={song.suno_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-white shrink-0"
-          >
-            Open in Suno <ExternalLink size={14} />
-          </a>
-        )}
       </div>
 
-      {song.audio_url && (
-        <div>
-          <audio
-            ref={audioRef}
-            controls
-            preload="none"
-            autoPlay={autoPlay}
-            src={song.audio_url}
-            onError={() => setPlayFailed(true)}
-            className="w-full"
-          />
-          {playFailed && (
-            <p className="text-sm text-yellow-500 mt-2">
-              This song could not be played here (Suno may block playing it on other sites, or the song was removed).
-              Use &ldquo;Open in Suno&rdquo; to listen there.
-            </p>
-          )}
-        </div>
+      {/* Suno's audio is protected and cannot be played on other sites, so listening happens in Suno. */}
+      {song.suno_url && (
+        <a
+          href={song.suno_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors font-medium"
+        >
+          <Headphones size={18} /> Listen in Suno <ExternalLink size={14} className="text-gray-400" />
+        </a>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

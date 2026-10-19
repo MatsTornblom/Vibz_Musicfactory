@@ -9,6 +9,7 @@ import {
   deleteJob,
   getJob,
   listSongsForJob,
+  resolveShareLinks,
   startGeneration,
   updateJob,
   type JobEdit,
@@ -81,12 +82,13 @@ export function JobEditor() {
   }, [jobId, applyJob]);
 
   const addFromLinks = async () => {
-    const { ids, unrecognised } = parseSunoLinks(links);
-    if (!ids.length) {
+    const parsed = parseSunoLinks(links);
+    const { unrecognised } = parsed;
+    if (!parsed.ids.length && !parsed.shareLinks.length) {
       setLinkMsg({
         ok: false,
         text: unrecognised.length
-          ? 'No song id found. Open the song in Suno and copy its address (suno.com/song/…). Short share links (suno.com/s/…) do not work.'
+          ? 'No Suno song found in that text. Paste the link from Suno\'s Share button (suno.com/s/…) or the song page address (suno.com/song/…).'
           : 'Paste at least one Suno song link.',
       });
       return;
@@ -94,6 +96,21 @@ export function JobEditor() {
     setBusy(true);
     setLinkMsg(null);
     try {
+      // Share links (suno.com/s/...) need a server lookup to find the song behind them.
+      const ids = [...parsed.ids];
+      const unresolved: string[] = [];
+      if (parsed.shareLinks.length) {
+        const { resolved, failed } = await resolveShareLinks(parsed.shareLinks);
+        for (const id of Object.values(resolved)) if (!ids.includes(id)) ids.push(id);
+        unresolved.push(...failed);
+      }
+      if (!ids.length) {
+        setLinkMsg({
+          ok: false,
+          text: `Could not find the song behind ${unresolved.join(', ')}. Open the link in Suno and paste the address of the song page (suno.com/song/…) instead.`,
+        });
+        return;
+      }
       const fresh = await getJob(jobId); // make sure we copy the latest saved prompt
       const { added, duplicates } = await addSongs(fresh, ids);
       setSongs(await listSongsForJob(jobId));
@@ -101,6 +118,7 @@ export function JobEditor() {
       setLinks('');
       const parts = [`Added ${added} song${added === 1 ? '' : 's'}.`];
       if (duplicates.length) parts.push(`${duplicates.length} already in the tool.`);
+      if (unresolved.length) parts.push(`Could not look up: ${unresolved.join(', ')}.`);
       if (unrecognised.length) parts.push(`Ignored: ${unrecognised.join(', ')}`);
       setLinkMsg({ ok: true, text: parts.join(' ') });
     } catch (e) {
@@ -352,15 +370,16 @@ export function JobEditor() {
         <div className="bg-gray-800 rounded-lg p-6 space-y-4">
           <h2 className="text-xl font-semibold flex items-center gap-2"><Music size={20} /> Songs from Suno</h2>
           <p className="text-sm text-gray-400">
-            Paste the Suno link of each song you made from this prompt, one per line (Suno makes two per generation).
-            Title, style and lyrics are filled in from the prompt above and the song vibe from the AI&apos;s suggestion.
-            You can edit them on each song.
+            Paste the link of each song you made from this prompt, one per line (Suno makes two per generation). Use
+            the link from Suno&apos;s Share button or the address of the song page. Title, style and lyrics are filled in
+            from the prompt above and the song vibe from the AI&apos;s suggestion; you can edit them on each song. You
+            listen to the songs in Suno.
           </p>
           <textarea
             value={links}
             onChange={e => setLinks(e.target.value)}
             rows={2}
-            placeholder="https://suno.com/song/…"
+            placeholder="https://suno.com/s/… or https://suno.com/song/…"
             className="w-full px-4 py-2 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 font-mono text-sm"
           />
           <div className="flex items-center gap-3">

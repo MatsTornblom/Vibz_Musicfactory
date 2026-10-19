@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 import { DEFAULT_MODEL, DEFAULT_PROMPT, SETTING_KEYS } from '../../shared/promptDefaults';
-import { sunoAudioUrl, sunoSongUrl } from '../../shared/suno';
+import { sunoSongUrl } from '../../shared/suno';
 import type { Batch, Job, Song, SongWithJob } from './types';
 
 function check<T>(res: { data: T | null; error: { message: string } | null }): T {
@@ -97,6 +97,20 @@ export async function startGeneration(jobId: string): Promise<void> {
 
 // --- Songs --------------------------------------------------------------------------------
 
+/** Look up the song id behind Suno share links (suno.com/s/...). Needs the server: browsers cannot read the redirect. */
+export async function resolveShareLinks(urls: string[]): Promise<{ resolved: Record<string, string>; failed: string[] }> {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Not logged in');
+  const res = await fetch('/.netlify/functions/resolve-suno-link', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+    body: JSON.stringify({ urls }),
+  });
+  const body = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(body?.error ?? `Could not look up the share links (HTTP ${res.status})`);
+  return body as { resolved: Record<string, string>; failed: string[] };
+}
+
 export async function listSongsForJob(jobId: string): Promise<Song[]> {
   return check(
     await supabase.from('mf_songs').select('*').eq('job_id', jobId).order('created_at', { ascending: true })
@@ -130,7 +144,6 @@ export async function addSongs(job: Job, sunoIds: string[]): Promise<{ added: nu
       job_id: job.id,
       suno_id: id,
       suno_url: sunoSongUrl(id),
-      audio_url: sunoAudioUrl(id),
       title: job.title,
       style_tags: job.style_prompt,
       lyrics: job.lyrics,

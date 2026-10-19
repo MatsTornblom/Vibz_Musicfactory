@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { getBatch, listSongsForFolder, updateSong } from '../lib/api';
@@ -26,9 +26,7 @@ export function Review() {
   const [songs, setSongs] = useState<SongWithJob[] | null>(null);
   const [filter, setFilter] = useState<Filter>('undecided');
   const [index, setIndex] = useState(0);
-  const [autoplay, setAutoplay] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
     getBatch(batchId).then(setFolder).catch(e => setError(e.message));
@@ -88,10 +86,8 @@ export function Review() {
       if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       const k = e.key.toLowerCase();
-      if (k === ' ') {
-        e.preventDefault();
-        const a = audioRef.current;
-        if (a) (a.paused ? a.play().catch(() => {}) : a.pause());
+      if (k === 'o') {
+        if (current?.suno_url) window.open(current.suno_url, '_blank', 'noopener');
       } else if (k === 'k') decide('keep');
       else if (k === 'd') decide('discard');
       else if (k === 'arrowright' || k === 'l') move(1);
@@ -99,7 +95,7 @@ export function Review() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [decide, move]);
+  }, [decide, move, current]);
 
   return (
     <div className="space-y-6">
@@ -130,14 +126,10 @@ export function Review() {
                 {f.label} <span className="text-gray-400">({counts[f.key]})</span>
               </button>
             ))}
-            <label className="ml-auto flex items-center gap-2 text-sm text-gray-400">
-              <input type="checkbox" checked={autoplay} onChange={e => setAutoplay(e.target.checked)} className="accent-pink-500" />
-              Autoplay
-            </label>
           </div>
 
           <div className="text-sm text-gray-500">
-            Shortcuts: <kbd className="px-1 bg-gray-800 rounded">Space</kbd> play/pause ·{' '}
+            Shortcuts: <kbd className="px-1 bg-gray-800 rounded">O</kbd> listen in Suno ·{' '}
             <kbd className="px-1 bg-gray-800 rounded">K</kbd> keep · <kbd className="px-1 bg-gray-800 rounded">D</kbd> discard ·{' '}
             <kbd className="px-1 bg-gray-800 rounded">←</kbd>/<kbd className="px-1 bg-gray-800 rounded">→</kbd> previous / next
           </div>
@@ -160,8 +152,6 @@ export function Review() {
                     context={`From: ${current.job.brief_style}`}
                     onChange={u => replaceSong({ ...current, ...u })}
                     onError={setError}
-                    audioRef={audioRef}
-                    autoPlay={autoplay}
                   />
                 )}
                 <div className="flex gap-2">
