@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Layers, Search, Settings } from 'lucide-react';
 
 const NAV = [
@@ -10,6 +10,10 @@ const NAV = [
 // Deliberately the same dark admin look as the Vibz Admin app: it must be obvious this is
 // internal tooling, not the user-facing app.
 export function Layout() {
+  const { pathname } = useLocation();
+  // "Batches" also covers the batch and job pages that live under it.
+  const isBatchArea = pathname === '/' || pathname.startsWith('/batches') || pathname.startsWith('/jobs');
+
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <div className="fixed inset-y-0 left-0 w-64 bg-gray-800">
@@ -25,7 +29,7 @@ export function Layout() {
               end={path === '/'}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-6 py-3 text-sm font-medium ${
-                  isActive ? 'bg-pink-500/20 text-pink-500' : 'hover:bg-gray-700'
+                  (path === '/' ? isBatchArea : isActive) ? 'bg-pink-500/20 text-pink-500' : 'hover:bg-gray-700'
                 }`
               }
             >

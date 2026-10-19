@@ -2,6 +2,10 @@ import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { Placeholder } from './components/Placeholder';
+import { Batches } from './components/Batches';
+import { BatchDetail } from './components/BatchDetail';
+import { JobEditor } from './components/JobEditor';
+import { Settings } from './components/Settings';
 import { LoadingScreen, LoginModal, NoAccessScreen } from './components/Modals';
 import { resolveAccess, type AccessState } from './lib/auth';
 import { supabase } from './lib/supabase';
@@ -35,18 +39,14 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route element={<Layout />}>
-          <Route
-            path="/"
-            element={<Placeholder title="Batches" description="Create batches of song briefs, generate Suno prompts with AI and track each job." comingIn="the next iteration" />}
-          />
+          <Route path="/" element={<Batches />} />
+          <Route path="/batches/:batchId" element={<BatchDetail />} />
+          <Route path="/jobs/:jobId" element={<JobEditor />} />
           <Route
             path="/search"
             element={<Placeholder title="Search" description="Search across briefs, titles, lyrics and style tags, including songs you discarded." comingIn="a later iteration" />}
           />
-          <Route
-            path="/settings"
-            element={<Placeholder title="Settings" description="Edit the prompt-creator prompt and choose the AI model." comingIn="the next iteration" />}
-          />
+          <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

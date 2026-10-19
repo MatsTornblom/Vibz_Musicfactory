@@ -24,17 +24,34 @@ npm run dev
 
 ## Deploy
 
-Netlify from GitHub, auto-deploy on push to `main`. Env vars (Netlify, Site settings):
-`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`; later also `OPENAI_API_KEY` and
-`SUPABASE_SECRET_KEY` (server-side only, never `VITE_`-prefixed).
+Netlify from GitHub, auto-deploy on push to `main` (build `npm run build`, publish `dist`,
+functions in `netlify/functions`). Env vars (Netlify, Site settings):
+
+| Variable | Used by | Notes |
+|---|---|---|
+| `VITE_SUPABASE_URL` | browser + functions | public |
+| `VITE_SUPABASE_ANON_KEY` | browser | public by design (RLS protects data) |
+| `SUPABASE_SECRET_KEY` | functions only | bypasses RLS: never `VITE_`-prefixed |
+| `OPENAI_API_KEY` | functions only | never `VITE_`-prefixed |
 
 **This repo is public. Never commit keys or `.env` files.**
+
+## How prompt generation works
+
+Browser, then `generate-prompt` (checks login + super admin + `music-factory` section, marks the
+job `generating`), then `generate-prompt-background` (re-checks, calls OpenAI with structured
+output, writes the result to the job). The UI polls the job. The prompt text and model name are
+edited in Settings (`mf_settings`); the output format is fixed in `shared/promptDefaults.ts`.
+
+## Tests
+
+`npm test` runs the generation logic against a fake database and a fake OpenAI (no keys needed).
 
 ## Plan
 
 0. Groundwork (repo, Netlify, SQL)
-1. Skeleton + access (this)
-2. Brief to prompt (OpenAI)
+1. Skeleton + access
+2. Brief to prompt (OpenAI) (this)
 3. Songs + curation
 4. Publish + search
 5. Optional Suno automation (Chrome extension)
