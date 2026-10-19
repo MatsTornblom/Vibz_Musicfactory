@@ -62,7 +62,7 @@ export function BatchDetail() {
   return (
     <div className="space-y-6">
       <Link to="/" className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-white">
-        <ArrowLeft size={16} /> All batches
+        <ArrowLeft size={16} /> All folders
       </Link>
       <h1 className="text-3xl font-bold">{batch?.name ?? '…'}</h1>
 
@@ -112,7 +112,7 @@ export function BatchDetail() {
         {jobs === null ? (
           <div className="p-6 text-gray-400 flex items-center gap-2"><Loader2 size={18} className="animate-spin" /> Loading…</div>
         ) : jobs.length === 0 ? (
-          <div className="p-6 text-gray-400">No briefs in this batch yet.</div>
+          <div className="p-6 text-gray-400">No briefs in this folder yet.</div>
         ) : (
           <table className="w-full">
             <thead>

@@ -2,7 +2,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Layers, Search, Settings } from 'lucide-react';
 
 const NAV = [
-  { path: '/', label: 'Batches', icon: Layers },
+  { path: '/', label: 'Folders', icon: Layers },
   { path: '/search', label: 'Search', icon: Search },
   { path: '/settings', label: 'Settings', icon: Settings },
 ];
@@ -11,8 +11,8 @@ const NAV = [
 // internal tooling, not the user-facing app.
 export function Layout() {
   const { pathname } = useLocation();
-  // "Batches" also covers the batch and job pages that live under it.
-  const isBatchArea = pathname === '/' || pathname.startsWith('/batches') || pathname.startsWith('/jobs');
+  // "Folders" also covers the folder and job pages that live under it.
+  const isBatchArea = pathname === '/' || pathname.startsWith('/folders') || pathname.startsWith('/jobs');
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">

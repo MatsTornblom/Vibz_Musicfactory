@@ -141,7 +141,7 @@ export function JobEditor() {
     if (!job || !confirm('Delete this brief and everything generated from it?')) return;
     try {
       await deleteJob(job.id);
-      navigate(job.batch_id ? `/batches/${job.batch_id}` : '/');
+      navigate(job.batch_id ? `/folders/${job.batch_id}` : '/');
     } catch (e) {
       setError((e as Error).message);
     }
@@ -166,10 +166,10 @@ export function JobEditor() {
   return (
     <div className="space-y-6 max-w-4xl">
       <Link
-        to={job.batch_id ? `/batches/${job.batch_id}` : '/'}
+        to={job.batch_id ? `/folders/${job.batch_id}` : '/'}
         className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-white"
       >
-        <ArrowLeft size={16} /> Back to batch
+        <ArrowLeft size={16} /> Back to folder
       </Link>
 
       <div className="flex items-center gap-4">

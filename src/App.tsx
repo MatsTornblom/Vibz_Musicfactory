@@ -40,7 +40,7 @@ export default function App() {
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<Batches />} />
-          <Route path="/batches/:batchId" element={<BatchDetail />} />
+          <Route path="/folders/:batchId" element={<BatchDetail />} />
           <Route path="/jobs/:jobId" element={<JobEditor />} />
           <Route
             path="/search"
